@@ -42,7 +42,16 @@
  **********************************************************/
 LibHumidity::LibHumidity(uint8_t sensorType) {
     Wire.begin();
-    readDelay = 100;
+
+    switch (sensorType) {
+        case eSensorHTU21:
+            SetReadDelay(50, 16);
+            break;
+        case eSensorSHT21:
+        case eSensorUnknown:
+            SetReadDelay(85, 29);
+            break;
+    }
 }
 
 /******************************************************************************
@@ -59,8 +68,7 @@ float LibHumidity::GetHumidity(void) {
 
     float humidity;
 
-    humidity = calculateHumidity(readSensor(eRHumidityHoldCmd),
-                                 readSensor(eTempHoldCmd));
+    humidity = calculateHumidity(readSensor(eRHumidityHoldCmd));
 
     return humidity;
 }
@@ -77,21 +85,6 @@ float LibHumidity::GetTemperatureC(void) {
 
     temperature = calculateTemperatureC(readSensor(eTempHoldCmd));
 
-    return temperature;
-}
-
-/**********************************************************
- * GetTemperatureF
- *  Gets the current temperature from the sensor.
- *
- * @return float - The temperature in Deg F
- **********************************************************/
-float LibHumidity::GetTemperatureF(void) {
-	
-    float temperature;
-	
-    temperature = calculateTemperatureF(readSensor(eTempHoldCmd));
-	
     return temperature;
 }
 
@@ -113,21 +106,41 @@ float LibHumidity::GetTemperatureF(void) {
  *      8 bit 1 3 ms
  *
  **********************************************************/
-void LibHumidity::SetReadDelay(uint16_t delay) {
-    readDelay = delay;
+void LibHumidity::SetReadDelay(uint16_t readTemperatureDelay, uint16_t readHumidityDelay) {
+    this->readTemperatureDelay = readTemperatureDelay;
+    this->readHumidityDelay = readHumidityDelay;
 }
 
 /******************************************************************************
  * Private Functions
  ******************************************************************************/
 
+uint16_t LibHumidity::getDelay(uint8_t command) {
+    static const int holdBitMask = 0x10;
+
+    command &= ~holdBitMask;
+    if (command == eTempHoldCmd) {
+        return readTemperatureDelay;
+    }
+    if (command == eRHumidityHoldCmd) {
+        return readHumidityDelay;
+    }
+
+    return 0;
+}
+
 uint16_t LibHumidity::readSensor(uint8_t command) {
+    static const int readTemperatureDelay = 85;
+    static const int readHumidityDelay = 29;
 
     uint16_t result;
 
     Wire.beginTransmission(eSHT21Address);   //begin
     Wire.write(command);                      //send the pointer location
+
+    uint8_t readDelay = getDelay(command);
     delay(readDelay);
+
     Wire.endTransmission();                  //end
 
     Wire.requestFrom(eSHT21Address, 3);
@@ -138,33 +151,20 @@ uint16_t LibHumidity::readSensor(uint8_t command) {
     //Store the result
     result = ((Wire.read()) << 8);
     result += Wire.read();
-result &= ~0x0003;   // clear two low bits (status bits)
+    result &= ~0x0003;   // clear two low bits (status bits)
     return result;
 }
 
 
 float LibHumidity::calculateTemperatureC(uint16_t analogTempValue) {
 
-  float st;
   float temperatureC;
 
-st = analogTempValue;
   temperatureC =  (((175.72/65536.0) * (float)analogTempValue) - 46.85); //T= -46.85 + 175.72 * ST/2^16
   return temperatureC;
 }
 
-float LibHumidity::calculateTemperatureF(uint16_t analogTempValue) {
-	
-	float st;
-	float temperatureF;
-	
-	st = analogTempValue;
-	temperatureF =  (((175.72/65536.0) * (float)analogTempValue) - 46.85) * 9/5 + 32; //T= -46.85 + 175.72 * ST/2^16
-	return temperatureF;
-}
-
-
-float LibHumidity::calculateHumidity(uint16_t analogHumValue, uint16_t analogTempValue) {
+float LibHumidity::calculateHumidity(uint16_t analogHumValue) {
 
 float srh = analogHumValue;
 float humidityRH;                       // variable for result
@@ -174,5 +174,4 @@ float humidityRH;                       // variable for result
  humidityRH = -6.0 + 125.0/65536.0 * srh;       // RH= -6 + 125 * SRH/2^16
  return humidityRH;
 }
-
 

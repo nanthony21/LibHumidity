@@ -32,6 +32,12 @@ typedef enum {
 } HUM_SENSOR_T;
 
 typedef enum {
+    eSensorUnknown,
+    eSensorSHT21,
+    eSensorHTU21
+} HUM_SENSOR_TYPE_T;
+
+typedef enum {
     eTempHoldCmd        = 0xE3,
     eRHumidityHoldCmd  = 0xE5,
     eTempNoHoldCmd      = 0xF3,
@@ -41,19 +47,19 @@ typedef enum {
 class LibHumidity
 {
   private:
-      uint16_t readDelay;
-      float calculateHumidity(uint16_t analogHumValue, uint16_t analogTempValue);
+      uint16_t readTemperatureDelay;
+      uint16_t readHumidityDelay;
+
+      float calculateHumidity(uint16_t analogHumValue);
       float calculateTemperatureC(uint16_t analogTempValue);
-	  float calculateTemperatureF(uint16_t analogTempValue);
+      uint16_t getDelay(uint8_t command);
       uint16_t readSensor(uint8_t command);
 
   public:
     LibHumidity(uint8_t sensorType);
     float GetHumidity(void);
     float GetTemperatureC(void);
-	float GetTemperatureF(void);
-    void SetReadDelay(uint16_t delay);
-
+    void SetReadDelay(uint16_t readTemperatureDelay, uint16_t readHumidityDelay);
 };
 
 #endif

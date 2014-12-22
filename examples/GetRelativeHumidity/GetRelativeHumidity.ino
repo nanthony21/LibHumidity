@@ -9,7 +9,7 @@
 #include <Wire.h>
 #include <LibHumidity.h>
 
-LibHumidity humidity = LibHumidity(0);
+LibHumidity humidity = LibHumidity(eSensorSHT21);
 
 void setup() {
   Serial.begin(9600);
@@ -19,12 +19,10 @@ void setup() {
   digitalWrite(17, HIGH); //VCC pin
 }
 
-
 void loop() {
   Serial.print("RHumidity: ");
   Serial.print(humidity.GetHumidity());
   Serial.print(" Temp in C: ");
-  Serial.print(humidity.GetTemperatureC());
-  Serial.print(" Temp in F: ");
-  Serial.println(humidity.GetTemperatureF());
+  Serial.println(humidity.GetTemperatureC());
 }
+
