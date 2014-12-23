@@ -23,7 +23,12 @@
 */
 
 #include <inttypes.h>
+#ifdef LIBHUMIDITY_USE_I2C_T3
+#include <i2c_t3.h>
+#else
 #include <Wire.h>
+#endif
+
 //#include <wiring.h>
 #include "LibHumidity.h"
 
