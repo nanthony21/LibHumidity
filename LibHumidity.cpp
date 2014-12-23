@@ -88,6 +88,13 @@ float LibHumidity::GetTemperatureC(void) {
     return temperature;
 }
 
+void LibHumidity::ResetSensor() {
+	Wire.beginTransmission(eSHT21Address);
+	Wire.write(eSoftResetCmd);
+	delay(15);
+	Wire.endTransmission();
+}
+
 /**********************************************************
  * SetReadDelay
  *  Set the I2C Read delay from the sensor.
@@ -130,9 +137,6 @@ uint16_t LibHumidity::getDelay(uint8_t command) {
 }
 
 uint16_t LibHumidity::readSensor(uint8_t command) {
-    static const int readTemperatureDelay = 85;
-    static const int readHumidityDelay = 29;
-
     uint16_t result;
 
     Wire.beginTransmission(eSHT21Address);   //begin
@@ -149,29 +153,17 @@ uint16_t LibHumidity::readSensor(uint8_t command) {
     }
 
     //Store the result
-    result = ((Wire.read()) << 8);
-    result += Wire.read();
+    result = (Wire.read()) << 8;
+    result |= Wire.read();
     result &= ~0x0003;   // clear two low bits (status bits)
     return result;
 }
 
-
 float LibHumidity::calculateTemperatureC(uint16_t analogTempValue) {
-
-  float temperatureC;
-
-  temperatureC =  (((175.72/65536.0) * (float)analogTempValue) - 46.85); //T= -46.85 + 175.72 * ST/2^16
-  return temperatureC;
+    return 175.72 / 65536.0 * (float)analogTempValue - 46.85; //T= -46.85 + 175.72 * ST/2^16
 }
 
 float LibHumidity::calculateHumidity(uint16_t analogHumValue) {
-
-float srh = analogHumValue;
-float humidityRH;                       // variable for result
-
-//-- calculate relative humidity [%RH] --
-
- humidityRH = -6.0 + 125.0/65536.0 * srh;       // RH= -6 + 125 * SRH/2^16
- return humidityRH;
+  return -6.0 + 125.0/65536.0 * analogHumValue;       // RH= -6 + 125 * SRH/2^16
 }
 

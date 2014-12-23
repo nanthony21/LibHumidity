@@ -39,9 +39,10 @@ typedef enum {
 
 typedef enum {
     eTempHoldCmd        = 0xE3,
-    eRHumidityHoldCmd  = 0xE5,
+    eRHumidityHoldCmd   = 0xE5,
     eTempNoHoldCmd      = 0xF3,
     eRHumidityNoHoldCmd = 0xF5,
+	eSoftResetCmd       = 0xF0
 } HUM_MEASUREMENT_CMD_T;
 
 class LibHumidity
@@ -59,6 +60,7 @@ class LibHumidity
     LibHumidity(uint8_t sensorType);
     float GetHumidity(void);
     float GetTemperatureC(void);
+	void ResetSensor();
     void SetReadDelay(uint16_t readTemperatureDelay, uint16_t readHumidityDelay);
 };
 

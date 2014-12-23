@@ -1,28 +1,28 @@
+#include <LibHumidity.h>
+
 /****************************
  * GetRelativeHumidity
  *  An example sketch that reads the sensor and prints the
  *  relative humidity to the PC's serial port
  *
- *  Tested with the SHT21-Breakout
- *  Humidity sensor from Modern Device.
+ *  Tested with the HTU21 Breakout Board
  *****************************/
 #include <Wire.h>
 #include <LibHumidity.h>
 
-LibHumidity humidity = LibHumidity(eSensorSHT21);
+LibHumidity humidity = LibHumidity(eSensorHTU21);
 
 void setup() {
   Serial.begin(9600);
-  pinMode(16, OUTPUT);
-  digitalWrite(16, LOW);  //GND pin
-  pinMode(17, OUTPUT);
-  digitalWrite(17, HIGH); //VCC pin
+  humidity.ResetSensor();
+  delay(5000);
 }
 
 void loop() {
-  Serial.print("RHumidity: ");
+  Serial.print("RH: ");
   Serial.print(humidity.GetHumidity());
-  Serial.print(" Temp in C: ");
+  Serial.print(" Temp: ");
   Serial.println(humidity.GetTemperatureC());
+  delay(2000);
 }
 
