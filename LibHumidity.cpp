@@ -59,6 +59,24 @@ LibHumidity::LibHumidity(uint8_t sensorType) {
     }
 }
 
+#ifdef LIBHUMIDITY_USE_I2C_T3
+
+LibHumidity::LibHumidity(uint8_t sensorType, i2c_pins pins, i2c_rate rate) {
+    Wire.begin(I2C_MASTER, 0, pins, I2C_PULLUP_EXT, rate);
+
+    switch (sensorType) {
+        case eSensorHTU21:
+            SetReadDelay(50, 16);
+            break;
+        case eSensorSHT21:
+        case eSensorUnknown:
+            SetReadDelay(85, 29);
+            break;
+    }
+}
+
+#endif
+
 /******************************************************************************
  * Global Functions
  ******************************************************************************/

@@ -27,6 +27,10 @@
 
 #include <inttypes.h>
 
+#ifdef LIBHUMIDITY_USE_I2C_T3
+#include <i2c_t3.h>
+#endif
+
 typedef enum {
     eSHT21Address = 0x40,
 } HUM_SENSOR_T;
@@ -42,7 +46,7 @@ typedef enum {
     eRHumidityHoldCmd   = 0xE5,
     eTempNoHoldCmd      = 0xF3,
     eRHumidityNoHoldCmd = 0xF5,
-	eSoftResetCmd       = 0xF0
+    eSoftResetCmd       = 0xF0
 } HUM_MEASUREMENT_CMD_T;
 
 class LibHumidity
@@ -58,9 +62,14 @@ class LibHumidity
 
   public:
     LibHumidity(uint8_t sensorType);
+
+#ifdef LIBHUMIDITY_USE_I2C_T3
+    LibHumidity(uint8_t sensorType, i2c_pins pins, i2c_rate rate);
+#endif
+
     float GetHumidity(void);
     float GetTemperatureC(void);
-	void ResetSensor();
+    void ResetSensor();
     void SetReadDelay(uint16_t readTemperatureDelay, uint16_t readHumidityDelay);
 };
 
