@@ -29,7 +29,6 @@
 #include <Wire.h>
 #endif
 
-//#include <wiring.h>
 #include "LibHumidity.h"
 
 #if defined(ARDUINO) && ARDUINO >= 100
@@ -45,34 +44,14 @@
 /**********************************************************
  * Initialize the sensor based on the specified type.
  **********************************************************/
-LibHumidity::LibHumidity(uint8_t sensorType) {
+LibHumidity::LibHumidity() {
     Wire.begin();
-
-    switch (sensorType) {
-        case eSensorHTU21:
-            SetReadDelay(50, 16);
-            break;
-        case eSensorSHT21:
-        case eSensorUnknown:
-            SetReadDelay(85, 29);
-            break;
-    }
 }
 
 #ifdef LIBHUMIDITY_USE_I2C_T3
 
-LibHumidity::LibHumidity(uint8_t sensorType, i2c_pins pins, i2c_rate rate) {
+LibHumidity::LibHumidity(i2c_pins pins, i2c_rate rate) {
     Wire.begin(I2C_MASTER, 0, pins, I2C_PULLUP_EXT, rate);
-
-    switch (sensorType) {
-        case eSensorHTU21:
-            SetReadDelay(50, 16);
-            break;
-        case eSensorSHT21:
-        case eSensorUnknown:
-            SetReadDelay(85, 29);
-            break;
-    }
 }
 
 #endif
@@ -87,11 +66,11 @@ LibHumidity::LibHumidity(uint8_t sensorType, i2c_pins pins, i2c_rate rate) {
  *
  * @return float - The relative humidity in %RH
  **********************************************************/
-float LibHumidity::GetHumidity(void) {
+float LibHumidity::getHumidity(void) {
 
     float humidity;
 
-    humidity = calculateHumidity(readSensor(eRHumidityHoldCmd));
+    humidity = calculateHumidity(readMeasurement());
 
     return humidity;
 }
@@ -102,11 +81,11 @@ float LibHumidity::GetHumidity(void) {
  *
  * @return float - The temperature in Deg C
  **********************************************************/
-float LibHumidity::GetTemperatureC(void) {
+float LibHumidity::getTemperature(void) {
 
     float temperature;
 
-    temperature = calculateTemperatureC(readSensor(eTempHoldCmd));
+    temperature = calculateTemperatureC(readMeasurement());
 
     return temperature;
 }
@@ -116,6 +95,13 @@ void LibHumidity::ResetSensor() {
 	Wire.write(eSoftResetCmd);
 	delay(15);
 	Wire.endTransmission();
+}
+
+void LibHumidity::commandMeasurement(uint8_t command) {
+
+	Wire.beginTransmission(eSHT21Address);   //begin
+	Wire.write(command);                      //send the pointer location
+	Wire.endTransmission();                  //end
 }
 
 /**********************************************************
@@ -136,39 +122,16 @@ void LibHumidity::ResetSensor() {
  *      8 bit 1 3 ms
  *
  **********************************************************/
-void LibHumidity::SetReadDelay(uint16_t readTemperatureDelay, uint16_t readHumidityDelay) {
-    this->readTemperatureDelay = readTemperatureDelay;
-    this->readHumidityDelay = readHumidityDelay;
-}
 
 /******************************************************************************
  * Private Functions
  ******************************************************************************/
 
-uint16_t LibHumidity::getDelay(uint8_t command) {
-    static const int holdBitMask = 0x10;
 
-    command &= ~holdBitMask;
-    if (command == eTempHoldCmd) {
-        return readTemperatureDelay;
-    }
-    if (command == eRHumidityHoldCmd) {
-        return readHumidityDelay;
-    }
 
-    return 0;
-}
+uint16_t LibHumidity::readMeasurement(uint8_t command) {
 
-uint16_t LibHumidity::readSensor(uint8_t command) {
     uint16_t result;
-
-    Wire.beginTransmission(eSHT21Address);   //begin
-    Wire.write(command);                      //send the pointer location
-
-    uint8_t readDelay = getDelay(command);
-    delay(readDelay);
-
-    Wire.endTransmission();                  //end
 
     Wire.requestFrom(eSHT21Address, 3);
     while(Wire.available() < 3) {
@@ -182,7 +145,7 @@ uint16_t LibHumidity::readSensor(uint8_t command) {
     return result;
 }
 
-float LibHumidity::calculateTemperatureC(uint16_t analogTempValue) {
+float LibHumidity::calculateTemperature(uint16_t analogTempValue) {
     return 175.72 / 65536.0 * (float)analogTempValue - 46.85; //T= -46.85 + 175.72 * ST/2^16
 }
 
