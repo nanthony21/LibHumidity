@@ -52,25 +52,22 @@ typedef enum {
 class LibHumidity
 {
   private:
-      uint16_t readTemperatureDelay;
-      uint16_t readHumidityDelay;
 
       float calculateHumidity(uint16_t analogHumValue);
-      float calculateTemperatureC(uint16_t analogTempValue);
-      uint16_t getDelay(uint8_t command);
-      uint16_t readSensor(uint8_t command);
+      float calculateTemperature(uint16_t analogTempValue);
+      uint16_t readMeasurement(void);
 
   public:
-    LibHumidity(uint8_t sensorType);
+    LibHumidity(void);
 
 #ifdef LIBHUMIDITY_USE_I2C_T3
-    LibHumidity(uint8_t sensorType, i2c_pins pins, i2c_rate rate);
+    LibHumidity(i2c_pins pins, i2c_rate rate);
 #endif
 
-    float GetHumidity(void);
-    float GetTemperatureC(void);
+    float getHumidity(void);
+    float getTemperature(void);
     void ResetSensor();
-    void SetReadDelay(uint16_t readTemperatureDelay, uint16_t readHumidityDelay);
+	void commandMeasurement(uint8_t command);
 };
 
 #endif
